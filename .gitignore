@@ -1,0 +1,14 @@
+.env
+.pytest_cache/
+.tmp/
+__pycache__/
+*.pyc
+logs/
+data/vector_store/
+data/chroma/
+data/uploads/
+data/tickets.db
+*.db
+*.sqlite3
+*.log
+.streamlit/
