@@ -1,14 +1,39 @@
 # Enterprise IT Helpdesk Agent
 
-企业 IT Helpdesk Agent 是 Day 1 阶段的新项目骨架，用于把现有 RAG 能力迁移为企业 IT 知识库问答助手。
+Enterprise IT Helpdesk Agent is a local IT service desk Agent MVP.
 
-## 当前阶段
+It combines FastAPI, Streamlit, RAG, SQLite, and a rule-based Agent decision layer to support knowledge-base Q&A, Agent decisions, automatic ticket creation, ticket management, and dashboard metrics.
 
-- 项目目录：`D:\program\agent\projects\it-helpdesk-agent`
-- 初始代码从 `D:\program\agent\projects\rag-assistant` 复制而来
-- Day 1 目标：完成项目身份、默认配置、启动路径和基础验证命令更新
+## Features
 
-## 环境准备
+- Upload Markdown knowledge-base documents
+- Ask RAG questions with citations
+- Ask the Agent to decide the next action:
+  - `answer`: answer directly from the knowledge base
+  - `clarify`: ask for missing details
+  - `create_ticket`: create an IT support ticket
+- Browse, filter, inspect, and update tickets
+- View ticket dashboard metrics
+- Store tickets locally in SQLite
+
+## Project Structure
+
+```text
+app/
+  api/routes/        FastAPI routes
+  core/              configuration and logging
+  rag/               document loading, splitting, retrieval, vector store
+  schemas/           Pydantic schemas
+  services/          RAG, Agent, and Ticket business logic
+  storage/           SQLite ticket storage
+  ui/                Streamlit API client helpers
+
+sample_docs/         sample IT knowledge-base documents
+tests/               automated tests
+streamlit_app.py     Streamlit frontend
+```
+
+## Setup
 
 ```powershell
 cd D:\program\agent\projects\it-helpdesk-agent
@@ -18,14 +43,7 @@ python -m pip install -r requirements.txt
 Copy-Item .env.example .env
 ```
 
-默认使用本地 embedding：
-
-```env
-EMBEDDING_PROVIDER=local
-LOCAL_EMBEDDING_MODEL=sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
-```
-
-如需调用 OpenAI 兼容接口，请在 `.env` 中填写：
+Edit `.env` and set your model configuration:
 
 ```env
 OPENAI_API_KEY=your_api_key
@@ -33,34 +51,62 @@ OPENAI_BASE_URL=https://api.openai.com/v1
 CHAT_MODEL=gpt-5.4
 ```
 
-## 启动后端
+The default embedding provider is local:
+
+```env
+EMBEDDING_PROVIDER=local
+LOCAL_EMBEDDING_MODEL=sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+```
+
+## Run Backend
 
 ```powershell
 cd D:\program\agent\projects\it-helpdesk-agent
 python -m uvicorn app.main:app --reload
 ```
 
-访问：
+Open:
 
 - Swagger UI: `http://127.0.0.1:8000/docs`
 - Health check: `http://127.0.0.1:8000/health`
 
-## 启动 Streamlit
+## Run Frontend
+
+Open a second terminal:
 
 ```powershell
 cd D:\program\agent\projects\it-helpdesk-agent
 streamlit run streamlit_app.py --server.headless true
 ```
 
-访问：
+Open:
 
 ```text
 http://localhost:8501
 ```
 
-## sample_docs
+## Demo Flow
 
-Day 1 已加入 `sample_docs` 目录，可用于手动上传验证 IT 知识库 RAG 问答：
+1. Open the `Ingest` tab and upload `sample_docs/vpn-troubleshooting.md`.
+2. Open the `RAG` tab and ask:
+
+```text
+List the Windows and macOS commands for flushing DNS cache.
+```
+
+3. Open the `Agent` tab and ask:
+
+```text
+My VPN authentication keeps failing, my account may be locked, and I have retried multiple times. Please create a support ticket.
+```
+
+4. Open the `Tickets` tab and inspect the ticket created by the Agent.
+5. Update the ticket status, priority, and resolution note.
+6. Open the `Dashboard` tab and review ticket metrics.
+
+## Sample Knowledge Base
+
+The `sample_docs/` directory includes five sample IT documents:
 
 - `vpn-troubleshooting.md`
 - `email-account-and-password.md`
@@ -68,37 +114,35 @@ Day 1 已加入 `sample_docs` 目录，可用于手动上传验证 IT 知识库 
 - `printer-connection-faq.md`
 - `office-software-installation.md`
 
-## 运行测试
+## Run Tests
 
 ```powershell
 cd D:\program\agent\projects\it-helpdesk-agent
 python -m pytest
 ```
 
-## Demo flow
+The tests cover:
 
-1. Start the backend:
+- health API
+- RAG ingest and ask flows
+- Agent schemas, service logic, and API
+- Ticket schemas, store, service, and API
+- Streamlit API client helpers
 
-```powershell
-python -m uvicorn app.main:app --reload
-```
+## Local Runtime Data
 
-2. Start the Streamlit app:
+The following files and directories are runtime data and should not be committed:
 
-```powershell
-streamlit run streamlit_app.py --server.headless true
-```
+- `.env`
+- `data/chroma/`
+- `data/uploads/`
+- `data/tickets.db`
+- `logs/`
+- `__pycache__/`
+- `.pytest_cache/`
 
-3. Open the Streamlit app:
+They are already listed in `.gitignore`.
 
-```text
-http://localhost:8501
-```
+## Security Note
 
-4. Walk through the tabs:
-
-- Ingest a Markdown file.
-- Ask a RAG question.
-- Ask the Agent a support question.
-- Review and update tickets.
-- Check the dashboard metrics.
+This project is a local MVP. It does not include authentication, authorization, multi-user isolation, or production hardening. Do not expose it directly to the public internet.
